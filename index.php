@@ -27,6 +27,37 @@ if (isset($_GET['pokemon'])) {
 <head>
     <meta charset="UTF-8">
     <title>Pokédex PHP</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 50px;
+            max-width: 800px;
+            text-align: center;
+            background-color: #f0f0f0;
+        }
+ input{
+    padding: 10px;
+    width: 300px;
+}
+button{
+    padding: 10px 20px;
+    cursor: pointer;
+}
+.errore{
+    background-color: #ff0000;
+    padding: 10px;
+    margin: 10px 0;
+}
+.pokemon{
+    border: 1px solid #ddd;
+    padding: 20px;
+    border-radius: 10px;
+    margin-top: 20px;
+}
+.pokemon img{
+    width: 200px;
+}
+</style>
 </head>
 <body>
     <header>
