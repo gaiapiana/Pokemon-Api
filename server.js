@@ -34,7 +34,13 @@ function trovaStanzaDi(socketId) {
 }
 
 function nuovoGiocatore(id, nome) {
-  return { id, nome, pokemon: null, sceltaInCorso: false };
+  return {
+    id,
+    nome,
+    pokemon: null,
+    sceltaInCorso: false,
+    mossaScelta: null,
+  };
 }
 
 function stat(stats, nome) {
@@ -49,6 +55,13 @@ function mescola(lista) {
     [copia[i], copia[j]] = [copia[j], copia[i]];
   }
   return copia;
+}
+
+function etichetta(nome) {
+  return String(nome)
+    .split("-")
+    .map((parte) => parte.charAt(0).toUpperCase() + parte.slice(1))
+    .join(" ");
 }
 
 async function scegliMosseValide(moves) {
@@ -101,11 +114,72 @@ async function caricaPokemon(nome) {
   };
 }
 
-function datiBattaglia(stanza) {
+function datiPokemon(giocatore, proprio) {
+  return {
+    giocatore: giocatore.nome,
+    proprio,
+    nome: giocatore.pokemon.nome,
+    hp: giocatore.pokemon.hp,
+    sprite: giocatore.pokemon.sprite,
+    mosse: giocatore.pokemon.mosse,
+  };
+}
+
+function hpAggiornati(stanza) {
   return stanza.giocatori.map((g) => ({
     giocatore: g.nome,
-    ...g.pokemon,
+    hp: g.pokemon.hp,
   }));
+}
+
+function calcolaDanno(attaccante, difensore, mossa) {
+  const base = Math.floor(
+    (((2 * 50) / 5 + 2) * mossa.potenza * attaccante.pokemon.attacco) /
+      Math.max(1, difensore.pokemon.difesa) /
+      50 +
+      2
+  );
+  const casuale = 0.85 + Math.random() * 0.15;
+  return Math.floor(base * casuale);
+}
+
+function ordineAttacco(giocatori) {
+  const [a, b] = giocatori;
+  if (a.pokemon.velocita > b.pokemon.velocita) return [a, b];
+  if (b.pokemon.velocita > a.pokemon.velocita) return [b, a];
+  return Math.random() < 0.5 ? [a, b] : [b, a];
+}
+
+function eseguiAttacco(attaccante, difensore) {
+  const mossa = attaccante.mossaScelta;
+  const danno = calcolaDanno(attaccante, difensore, mossa);
+  difensore.pokemon.hp = Math.max(0, difensore.pokemon.hp - danno);
+  return `${etichetta(attaccante.pokemon.nome)} usa ${etichetta(mossa.nome)}! ${etichetta(difensore.pokemon.nome)} perde ${danno} HP.`;
+}
+
+function risolviTurno(codice, stanza) {
+  const [primo, secondo] = ordineAttacco(stanza.giocatori);
+  const messaggi = [eseguiAttacco(primo, secondo)];
+
+  if (secondo.pokemon.hp > 0) {
+    messaggi.push(eseguiAttacco(secondo, primo));
+  }
+
+  io.to(codice).emit("risultatoTurno", {
+    hp: hpAggiornati(stanza),
+    messaggi,
+  });
+
+  stanza.giocatori.forEach((g) => {
+    g.mossaScelta = null;
+  });
+
+  const ko = stanza.giocatori.find((g) => g.pokemon.hp <= 0);
+  if (!ko) return;
+
+  stanza.battagliaFinita = true;
+  const vincitore = stanza.giocatori.find((g) => g.pokemon.hp > 0);
+  io.to(codice).emit("fineBattaglia", { vincitore: vincitore.nome });
 }
 
 function rimuoviDaStanza(socketId) {
@@ -123,6 +197,8 @@ function rimuoviDaStanza(socketId) {
   const restante = stanza.giocatori[0];
   restante.pokemon = null;
   restante.sceltaInCorso = false;
+  restante.mossaScelta = null;
+  stanza.battagliaFinita = false;
   io.to(restante.id).emit("inAttesa", { codice });
 }
 
@@ -142,6 +218,7 @@ io.on("connection", (socket) => {
     const codice = generaCodice();
     rooms.set(codice, {
       giocatori: [nuovoGiocatore(socket.id, nomePulito)],
+      battagliaFinita: false,
     });
     socket.join(codice);
     socket.emit("inAttesa", { codice });
@@ -215,14 +292,43 @@ io.on("connection", (socket) => {
 
       const entrambiPronti = stanza.giocatori.every((g) => g.pokemon);
       if (entrambiPronti) {
-        io.to(codice).emit("battagliaPronta", {
-          pokemon: datiBattaglia(stanza),
+        stanza.battagliaFinita = false;
+        stanza.giocatori.forEach((g) => {
+          g.mossaScelta = null;
+        });
+        stanza.giocatori.forEach((g) => {
+          io.to(g.id).emit("battagliaPronta", {
+            pokemon: stanza.giocatori.map((altro) =>
+              datiPokemon(altro, altro.id === g.id)
+            ),
+          });
         });
       }
     } catch (err) {
       socket.emit("errore", { messaggio: "Errore durante il download del Pokémon." });
     } finally {
       giocatore.sceltaInCorso = false;
+    }
+  });
+
+  socket.on("sceltaMossa", ({ indice }) => {
+    const trovata = trovaStanzaDi(socket.id);
+    if (!trovata) return;
+
+    const { codice, stanza } = trovata;
+    if (stanza.battagliaFinita || stanza.giocatori.length < 2) return;
+
+    const giocatore = stanza.giocatori.find((g) => g.id === socket.id);
+    if (!giocatore.pokemon || giocatore.mossaScelta) return;
+
+    if (!Number.isInteger(indice) || indice < 0 || indice > 3) return;
+    const mossa = giocatore.pokemon.mosse[indice];
+    if (!mossa) return;
+
+    giocatore.mossaScelta = mossa;
+
+    if (stanza.giocatori.every((g) => g.mossaScelta)) {
+      risolviTurno(codice, stanza);
     }
   });
 
