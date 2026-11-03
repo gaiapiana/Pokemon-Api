@@ -3,18 +3,44 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Pokemon - prova Socket.IO</title>
+    <title>Pokemon - Lobby</title>
   </head>
   <body>
-    <h1 id="status">Connessione in corso...</h1>
-    <script src="/socket.io/socket.io.js"></script>
-    <script>
-      const statusEl = document.getElementById("status");
-      const socket = io();
+    <h1>Lobby</h1>
+    <p id="stato-connessione">Connessione in corso...</p>
+    <p id="errore" hidden></p>
 
-      socket.on("connect", () => {
-        statusEl.textContent = "Connesso";
-      });
-    </script>
+    <section id="lobby">
+      <label>
+        Nome
+        <input id="nome" type="text" maxlength="20" autocomplete="nickname" />
+      </label>
+
+      <button type="button" id="crea-stanza">Crea stanza</button>
+
+      <label>
+        Codice stanza
+        <input
+          id="codice"
+          type="text"
+          maxlength="4"
+          autocapitalize="characters"
+          spellcheck="false"
+        />
+      </label>
+      <button type="button" id="entra-stanza">Entra nella stanza</button>
+    </section>
+
+    <section id="attesa" hidden>
+      <p>In attesa del secondo giocatore.</p>
+      <p>Condividi questo codice: <strong id="codice-condivisione"></strong></p>
+    </section>
+
+    <section id="partita" hidden>
+      <p id="partita-testo"></p>
+    </section>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="/client.js"></script>
   </body>
 </html>
