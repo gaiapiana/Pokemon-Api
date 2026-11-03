@@ -10,6 +10,7 @@ const io = new Server(server);
 app.use(express.static(path.join(__dirname, "public")));
 
 const rooms = new Map();
+const POKEAPI = "https://pokeapi.co/api/v2";
 
 function generaCodice() {
   const lettere = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
@@ -32,6 +33,81 @@ function trovaStanzaDi(socketId) {
   return null;
 }
 
+function nuovoGiocatore(id, nome) {
+  return { id, nome, pokemon: null, sceltaInCorso: false };
+}
+
+function stat(stats, nome) {
+  const trovata = stats.find((s) => s.stat.name === nome);
+  return trovata ? trovata.base_stat : 0;
+}
+
+function mescola(lista) {
+  const copia = [...lista];
+  for (let i = copia.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [copia[i], copia[j]] = [copia[j], copia[i]];
+  }
+  return copia;
+}
+
+async function scegliMosseValide(moves) {
+  const nomi = mescola(moves.map((m) => m.move.name));
+  const valide = [];
+  const tentativi = Math.min(20, nomi.length);
+
+  for (let i = 0; i < tentativi && valide.length < 4; i++) {
+    const risposta = await fetch(`${POKEAPI}/move/${nomi[i]}`);
+    if (!risposta.ok) continue;
+
+    const mossa = await risposta.json();
+    if (mossa.power == null) continue;
+
+    valide.push({
+      nome: mossa.name,
+      potenza: mossa.power,
+      tipo: mossa.type.name,
+    });
+  }
+
+  return valide;
+}
+
+async function caricaPokemon(nome) {
+  const risposta = await fetch(`${POKEAPI}/pokemon/${encodeURIComponent(nome)}`);
+  if (risposta.status === 404) {
+    return { errore: "Questo Pokémon non esiste." };
+  }
+  if (!risposta.ok) {
+    return { errore: "Impossibile scaricare i dati del Pokémon." };
+  }
+
+  const dati = await risposta.json();
+  const mosse = await scegliMosseValide(dati.moves);
+  if (mosse.length < 4) {
+    return { errore: "Impossibile trovare 4 mosse valide. Riprova." };
+  }
+
+  return {
+    pokemon: {
+      nome: dati.name,
+      hp: stat(dati.stats, "hp"),
+      attacco: stat(dati.stats, "attack"),
+      difesa: stat(dati.stats, "defense"),
+      velocita: stat(dati.stats, "speed"),
+      sprite: dati.sprites.front_default,
+      mosse,
+    },
+  };
+}
+
+function datiBattaglia(stanza) {
+  return stanza.giocatori.map((g) => ({
+    giocatore: g.nome,
+    ...g.pokemon,
+  }));
+}
+
 function rimuoviDaStanza(socketId) {
   const trovata = trovaStanzaDi(socketId);
   if (!trovata) return;
@@ -45,6 +121,8 @@ function rimuoviDaStanza(socketId) {
   }
 
   const restante = stanza.giocatori[0];
+  restante.pokemon = null;
+  restante.sceltaInCorso = false;
   io.to(restante.id).emit("inAttesa", { codice });
 }
 
@@ -63,7 +141,7 @@ io.on("connection", (socket) => {
 
     const codice = generaCodice();
     rooms.set(codice, {
-      giocatori: [{ id: socket.id, nome: nomePulito }],
+      giocatori: [nuovoGiocatore(socket.id, nomePulito)],
     });
     socket.join(codice);
     socket.emit("inAttesa", { codice });
@@ -97,11 +175,55 @@ io.on("connection", (socket) => {
       return;
     }
 
-    stanza.giocatori.push({ id: socket.id, nome: nomePulito });
+    stanza.giocatori.push(nuovoGiocatore(socket.id, nomePulito));
     socket.join(codicePulito);
 
     const nomi = stanza.giocatori.map((g) => g.nome);
     io.to(codicePulito).emit("partitaPronta", { giocatori: nomi });
+  });
+
+  socket.on("scegliPokemon", async ({ nome }) => {
+    const nomePulito =
+      typeof nome === "string" ? nome.trim().toLowerCase() : "";
+    if (!nomePulito) {
+      socket.emit("errore", { messaggio: "Inserisci il nome di un Pokémon." });
+      return;
+    }
+
+    const trovata = trovaStanzaDi(socket.id);
+    if (!trovata || trovata.stanza.giocatori.length < 2) {
+      socket.emit("errore", { messaggio: "La partita non è ancora pronta." });
+      return;
+    }
+
+    const { codice, stanza } = trovata;
+    const giocatore = stanza.giocatori.find((g) => g.id === socket.id);
+    if (giocatore.pokemon || giocatore.sceltaInCorso) {
+      return;
+    }
+
+    giocatore.sceltaInCorso = true;
+    try {
+      const risultato = await caricaPokemon(nomePulito);
+      if (risultato.errore) {
+        socket.emit("errore", { messaggio: risultato.errore });
+        return;
+      }
+
+      giocatore.pokemon = risultato.pokemon;
+      socket.emit("pokemonScelto");
+
+      const entrambiPronti = stanza.giocatori.every((g) => g.pokemon);
+      if (entrambiPronti) {
+        io.to(codice).emit("battagliaPronta", {
+          pokemon: datiBattaglia(stanza),
+        });
+      }
+    } catch (err) {
+      socket.emit("errore", { messaggio: "Errore durante il download del Pokémon." });
+    } finally {
+      giocatore.sceltaInCorso = false;
+    }
   });
 
   socket.on("disconnect", () => {

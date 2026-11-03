@@ -38,6 +38,18 @@
 
     <section id="partita" hidden>
       <p id="partita-testo"></p>
+      <div id="scelta-pokemon">
+        <label>
+          Pokémon
+          <input id="nome-pokemon" type="text" />
+        </label>
+        <button type="button" id="scegli-pokemon">Scegli</button>
+      </div>
+      <p id="attesa-avversario" hidden>In attesa dell’avversario...</p>
+    </section>
+
+    <section id="battaglia" hidden>
+      <div id="pokemon-battaglia"></div>
     </section>
 
     <script src="/socket.io/socket.io.js"></script>
