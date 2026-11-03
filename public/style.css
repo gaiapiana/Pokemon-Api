@@ -1,0 +1,480 @@
+@import url("https://fonts.googleapis.com/css2?family=Nunito:wght@600;800&family=Press+Start+2P&display=swap");
+
+:root {
+  --ombra: 0 10px 30px rgba(0, 0, 0, 0.25);
+  --raggio: 18px;
+  --testo: #1b2430;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  min-height: 100%;
+}
+
+body {
+  font-family: Nunito, system-ui, sans-serif;
+  color: var(--testo);
+  min-height: 100dvh;
+}
+
+body.vista-lobby {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px 16px 40px;
+  background:
+    radial-gradient(circle at top left, #ffd54a 0%, transparent 42%),
+    radial-gradient(circle at bottom right, #ef5350 0%, transparent 40%),
+    linear-gradient(160deg, #1e88e5 0%, #42a5f5 45%, #81d4fa 100%);
+}
+
+body.vista-battaglia {
+  display: flex;
+  flex-direction: column;
+  background: #0b3d2e;
+}
+
+.stato-connessione {
+  position: fixed;
+  top: 10px;
+  right: 12px;
+  margin: 0;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.85);
+  font-size: 12px;
+  z-index: 20;
+}
+
+.errore {
+  position: fixed;
+  top: 44px;
+  left: 50%;
+  transform: translateX(-50%);
+  margin: 0;
+  max-width: calc(100% - 24px);
+  padding: 10px 14px;
+  border-radius: 12px;
+  background: #c62828;
+  color: #fff;
+  font-weight: 800;
+  z-index: 30;
+  text-align: center;
+}
+
+#schermo-lobby {
+  width: min(440px, 100%);
+}
+
+.card-lobby {
+  background: #fffdf7;
+  border: 4px solid #1b2430;
+  border-radius: 28px;
+  box-shadow: var(--ombra);
+  padding: 28px 22px 32px;
+  text-align: center;
+}
+
+.card-lobby h1 {
+  font-family: "Press Start 2P", system-ui, sans-serif;
+  font-size: clamp(16px, 5vw, 22px);
+  line-height: 1.45;
+  margin: 0 0 24px;
+  color: #c62828;
+}
+
+.card-lobby label {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  text-align: left;
+  font-weight: 800;
+  margin-bottom: 14px;
+}
+
+.card-lobby input,
+.card-lobby button {
+  width: 100%;
+  min-height: 54px;
+  border-radius: 16px;
+  font: inherit;
+  font-size: 1.15rem;
+  font-weight: 800;
+}
+
+.card-lobby input {
+  border: 3px solid #1b2430;
+  padding: 0 16px;
+  background: #fff;
+}
+
+.card-lobby button {
+  border: 3px solid #1b2430;
+  background: #ffcc02;
+  cursor: pointer;
+  margin-bottom: 12px;
+}
+
+.card-lobby button:hover,
+.card-lobby button:focus-visible {
+  background: #ffd84d;
+}
+
+.card-lobby button:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+
+.separatore {
+  margin: 8px 0 18px;
+  color: #607d8b;
+  font-weight: 800;
+}
+
+.codice-stanza {
+  font-family: "Press Start 2P", system-ui, sans-serif;
+  font-size: 1.4rem;
+  letter-spacing: 0.2em;
+  background: #1b2430;
+  color: #ffcc02;
+  border-radius: 16px;
+  padding: 16px;
+}
+
+#battaglia {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 100dvh;
+}
+
+#battaglia[hidden] {
+  display: none;
+}
+
+.campo {
+  position: relative;
+  flex: 1;
+  min-height: 280px;
+  padding: 16px 12px 8px;
+  background:
+    radial-gradient(ellipse at 70% 28%, rgba(255, 255, 255, 0.18), transparent 42%),
+    linear-gradient(#7ec8ff 0 42%, #78c850 42% 58%, #5aad3c 58% 100%);
+}
+
+.fila {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.fila-nemico {
+  justify-content: flex-end;
+  min-height: 42%;
+}
+
+.fila-alleato {
+  justify-content: flex-start;
+  min-height: 50%;
+  margin-top: auto;
+}
+
+.hud {
+  width: min(240px, 58%);
+  background: #fffdf7;
+  border: 4px solid #1b2430;
+  border-radius: 16px 6px 16px 6px;
+  padding: 10px 12px;
+  box-shadow: var(--ombra);
+}
+
+.hud-nome {
+  font-family: "Press Start 2P", system-ui, sans-serif;
+  font-size: 11px;
+  margin: 0 0 4px;
+}
+
+.hud-allenatore,
+.hp {
+  margin: 0 0 6px;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.hp-barra {
+  height: 12px;
+  background: #1b2430;
+  border-radius: 999px;
+  overflow: hidden;
+  border: 2px solid #1b2430;
+}
+
+.hp-valore {
+  height: 100%;
+  width: 100%;
+  transition: width 0.45s ease, background-color 0.3s ease;
+}
+
+.hp-verde {
+  background: #43a047;
+}
+
+.hp-giallo {
+  background: #fbc02d;
+}
+
+.hp-rosso {
+  background: #e53935;
+}
+
+.sprite-box {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  min-width: 38%;
+}
+
+.sprite {
+  width: min(42vw, 220px);
+  height: auto;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+  filter: drop-shadow(0 10px 0 rgba(0, 0, 0, 0.18));
+}
+
+.sprite-avversario .sprite {
+  width: min(36vw, 190px);
+}
+
+.colpito {
+  animation: colpito 0.5s ease;
+}
+
+@keyframes colpito {
+  0%,
+  100% {
+    transform: translateX(0);
+    opacity: 1;
+  }
+  20% {
+    transform: translateX(-10px);
+    opacity: 0.25;
+  }
+  40% {
+    transform: translateX(10px);
+    opacity: 1;
+  }
+  60% {
+    transform: translateX(-8px);
+    opacity: 0.35;
+  }
+  80% {
+    transform: translateX(8px);
+    opacity: 1;
+  }
+}
+
+.esito {
+  position: absolute;
+  inset: 18% 8% auto;
+  z-index: 15;
+  text-align: center;
+  font-family: "Press Start 2P", system-ui, sans-serif;
+  font-size: clamp(18px, 6vw, 34px);
+  line-height: 1.4;
+  padding: 22px 16px;
+  background: #fffdf7;
+  border: 6px solid #1b2430;
+  border-radius: 20px;
+  box-shadow: var(--ombra);
+}
+
+#battaglia {
+  position: relative;
+}
+
+.pannello-basso {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  padding: 10px;
+  background: #1b2430;
+}
+
+.registro {
+  background: #fff;
+  border: 4px solid #1b2430;
+  border-radius: 12px;
+  padding: 10px 12px;
+  min-height: 160px;
+  display: flex;
+  flex-direction: column;
+}
+
+.registro h2 {
+  margin: 0 0 8px;
+  font-size: 14px;
+}
+
+#attesa-mossa {
+  margin: 0 0 8px;
+  font-weight: 800;
+  color: #1565c0;
+}
+
+#registro-messaggi {
+  overflow-y: auto;
+  flex: 1;
+  max-height: 140px;
+}
+
+#registro-messaggi p {
+  margin: 0 0 8px;
+  font-size: 14px;
+}
+
+.mosse-griglia {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 1fr 1fr;
+  gap: 8px;
+}
+
+.mossa {
+  border: 3px solid #1b2430;
+  border-radius: 14px;
+  cursor: pointer;
+  color: #1b2430;
+  font: inherit;
+  font-weight: 800;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 4px;
+  min-height: 72px;
+  padding: 8px;
+}
+
+.mossa-nome {
+  font-size: 14px;
+}
+
+.mossa-info {
+  font-size: 11px;
+  text-transform: uppercase;
+  opacity: 0.85;
+}
+
+.mossa:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+
+.mossa[data-tipo="fire"] {
+  background: #ef5350;
+  color: #fff;
+}
+.mossa[data-tipo="water"] {
+  background: #42a5f5;
+  color: #fff;
+}
+.mossa[data-tipo="grass"] {
+  background: #66bb6a;
+  color: #fff;
+}
+.mossa[data-tipo="electric"] {
+  background: #fdd835;
+}
+.mossa[data-tipo="normal"] {
+  background: #bdbdbd;
+}
+.mossa[data-tipo="ice"] {
+  background: #80deea;
+}
+.mossa[data-tipo="fighting"] {
+  background: #e64a19;
+  color: #fff;
+}
+.mossa[data-tipo="poison"] {
+  background: #ab47bc;
+  color: #fff;
+}
+.mossa[data-tipo="ground"] {
+  background: #d4a373;
+}
+.mossa[data-tipo="flying"] {
+  background: #90caf9;
+}
+.mossa[data-tipo="psychic"] {
+  background: #f48fb1;
+}
+.mossa[data-tipo="bug"] {
+  background: #9ccc65;
+}
+.mossa[data-tipo="rock"] {
+  background: #a1887f;
+  color: #fff;
+}
+.mossa[data-tipo="ghost"] {
+  background: #7e57c2;
+  color: #fff;
+}
+.mossa[data-tipo="dragon"] {
+  background: #5c6bc0;
+  color: #fff;
+}
+.mossa[data-tipo="dark"] {
+  background: #455a64;
+  color: #fff;
+}
+.mossa[data-tipo="steel"] {
+  background: #90a4ae;
+}
+.mossa[data-tipo="fairy"] {
+  background: #f8bbd0;
+}
+
+@media (max-width: 700px) {
+  .pannello-basso {
+    grid-template-columns: 1fr;
+  }
+
+  .mosse-griglia {
+    order: -1;
+  }
+
+  .mossa {
+    min-height: 64px;
+  }
+
+  .sprite {
+    width: min(46vw, 180px);
+  }
+
+  .hud {
+    width: min(220px, 62%);
+  }
+
+  #registro-messaggi {
+    max-height: 110px;
+  }
+
+  .esito {
+    inset: 12% 6% auto;
+  }
+}
+
+@media (max-width: 420px) {
+  .hud-nome {
+    font-size: 9px;
+  }
+
+  .card-lobby {
+    padding: 22px 16px;
+  }
+}

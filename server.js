@@ -101,14 +101,18 @@ async function caricaPokemon(nome) {
     return { errore: "Impossibile trovare 4 mosse valide. Riprova." };
   }
 
+  const sprite = dati.sprites.front_default;
+  const hp = stat(dati.stats, "hp");
   return {
     pokemon: {
       nome: dati.name,
-      hp: stat(dati.stats, "hp"),
+      hp,
+      hpMax: hp,
       attacco: stat(dati.stats, "attack"),
       difesa: stat(dati.stats, "defense"),
       velocita: stat(dati.stats, "speed"),
-      sprite: dati.sprites.front_default,
+      sprite,
+      spriteRetro: dati.sprites.back_default || sprite,
       mosse,
     },
   };
@@ -120,7 +124,9 @@ function datiPokemon(giocatore, proprio) {
     proprio,
     nome: giocatore.pokemon.nome,
     hp: giocatore.pokemon.hp,
+    hpMax: giocatore.pokemon.hpMax,
     sprite: giocatore.pokemon.sprite,
+    spriteRetro: giocatore.pokemon.spriteRetro,
     mosse: giocatore.pokemon.mosse,
   };
 }

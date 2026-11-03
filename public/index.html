@@ -3,59 +3,82 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Pokemon - Lobby</title>
+    <title>Pokémon Battle</title>
+    <link rel="stylesheet" href="/style.css" />
   </head>
-  <body>
-    <h1>Lobby</h1>
-    <p id="stato-connessione">Connessione in corso...</p>
-    <p id="errore" hidden></p>
+  <body class="vista-lobby">
+    <p id="stato-connessione" class="stato-connessione">Connessione in corso...</p>
+    <p id="errore" class="errore" hidden></p>
 
-    <section id="lobby">
-      <label>
-        Nome
-        <input id="nome" type="text" maxlength="20" autocomplete="nickname" />
-      </label>
+    <main id="schermo-lobby">
+      <section class="card-lobby">
+        <h1>Pokémon Battle</h1>
 
-      <button type="button" id="crea-stanza">Crea stanza</button>
+        <div id="lobby">
+          <label>
+            Nome
+            <input id="nome" type="text" maxlength="20" autocomplete="nickname" />
+          </label>
 
-      <label>
-        Codice stanza
-        <input
-          id="codice"
-          type="text"
-          maxlength="4"
-          autocapitalize="characters"
-          spellcheck="false"
-        />
-      </label>
-      <button type="button" id="entra-stanza">Entra nella stanza</button>
-    </section>
+          <button type="button" id="crea-stanza">Crea stanza</button>
 
-    <section id="attesa" hidden>
-      <p>In attesa del secondo giocatore.</p>
-      <p>Condividi questo codice: <strong id="codice-condivisione"></strong></p>
-    </section>
+          <div class="separatore">oppure</div>
 
-    <section id="partita" hidden>
-      <p id="partita-testo"></p>
-      <div id="scelta-pokemon">
-        <label>
-          Pokémon
-          <input id="nome-pokemon" type="text" />
-        </label>
-        <button type="button" id="scegli-pokemon">Scegli</button>
-      </div>
-      <p id="attesa-avversario" hidden>In attesa dell’avversario...</p>
-    </section>
+          <label>
+            Codice stanza
+            <input
+              id="codice"
+              type="text"
+              maxlength="4"
+              autocapitalize="characters"
+              spellcheck="false"
+            />
+          </label>
+          <button type="button" id="entra-stanza">Entra nella stanza</button>
+        </div>
+
+        <div id="attesa" hidden>
+          <p>In attesa del secondo giocatore.</p>
+          <p>Condividi questo codice</p>
+          <p id="codice-condivisione" class="codice-stanza"></p>
+        </div>
+
+        <div id="partita" hidden>
+          <p id="partita-testo"></p>
+          <div id="scelta-pokemon">
+            <label>
+              Pokémon
+              <input id="nome-pokemon" type="text" />
+            </label>
+            <button type="button" id="scegli-pokemon">Scegli</button>
+          </div>
+          <p id="attesa-avversario" hidden>In attesa dell’avversario...</p>
+        </div>
+      </section>
+    </main>
 
     <section id="battaglia" hidden>
-      <p id="esito-battaglia" hidden></p>
-      <p id="attesa-mossa" hidden>In attesa dell’avversario...</p>
-      <div id="pokemon-battaglia"></div>
-      <section>
-        <h2>Registro battaglia</h2>
-        <div id="registro-messaggi"></div>
-      </section>
+      <div id="esito-battaglia" class="esito" hidden></div>
+
+      <div class="campo">
+        <div class="fila fila-nemico">
+          <div id="hud-avversario" class="hud"></div>
+          <div id="sprite-avversario" class="sprite-box sprite-avversario"></div>
+        </div>
+        <div class="fila fila-alleato">
+          <div id="sprite-proprio" class="sprite-box sprite-proprio"></div>
+          <div id="hud-proprio" class="hud"></div>
+        </div>
+      </div>
+
+      <div class="pannello-basso">
+        <section class="registro">
+          <h2>Registro battaglia</h2>
+          <p id="attesa-mossa" hidden>In attesa dell’avversario...</p>
+          <div id="registro-messaggi"></div>
+        </section>
+        <div id="mosse-griglia" class="mosse-griglia"></div>
+      </div>
     </section>
 
     <script src="/socket.io/socket.io.js"></script>
