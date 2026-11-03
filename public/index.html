@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="it">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Pokemon - prova Socket.IO</title>
+  </head>
+  <body>
+    <h1 id="status">Connessione in corso...</h1>
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+      const statusEl = document.getElementById("status");
+      const socket = io();
+
+      socket.on("connect", () => {
+        statusEl.textContent = "Connesso";
+      });
+    </script>
+  </body>
+</html>
